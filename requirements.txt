@@ -7,4 +7,4 @@ uvicorn==0.15.0
 #other
 scikit-learn==1.0.1
 lightgbm==3.3.0
-aoifiles==aiofiles==0.6.0
+aiofiles==0.6.0
