@@ -44,6 +44,15 @@ def ping2(incoming_data):     # il faut que l'agument de la fonction (incoming_d
 	print("-----------------------------------------")
 	return incoming_data
 	
+# 5B.Prise en main de la structure GET/POST + {id_client}
+@app.get('/hello_id_client/{id_client}')
+@app.post('/hello_id_client/{id_client}')
+def hello_id_client(id_client : int):
+	print("------------------------------------------")
+	print("type :", type(id_client))
+	print("------------------------------------------")
+	return f"Hello from hello_id_client(). Value = {id_client}. Type = {type(id_client)}"
+	
 
 # 4B. Convertit le json reçu en dataframe, puis retourne l'index du client
 @app.post('/pong/')
@@ -53,7 +62,7 @@ def pong_json(incoming_json):
 	return {'index client :': var}
 
 
-# 4C.Convertit le json reçu (au format de dict dans un string) en dataframe, puis retourne la proba de défaut de crédit
+# 5A.Convertit le json reçu (au format de dict dans un string) en dataframe, puis retourne la proba de défaut de crédit
 # Ca fonctionne via curl (SERVER/docs), mais pas via requests.
 @app.post('/predict_json/{json_un_client}')
 def predict_json(json_un_client):
@@ -63,16 +72,6 @@ def predict_json(json_un_client):
 	df2_un_client = pd.read_json(json_un_client, orient='index')
 	probability = model.predict_proba(df2_un_client)[:,1][0]
 	return {'probability': probability}
-	
-
-# 5A.Prise en main de la structure GET/POST + {id_client}
-@app.get('/hello_id_client/{id_client}')
-@app.post('/hello_id_client/{id_client}')
-def hello_id_client(id_client : int):
-	print("------------------------------------------")
-	print("type :", type(id_client))
-	print("------------------------------------------")
-	return f"Hello from hello_id_client(). Value = {id_client}. Type = {type(id_client)}"
 	
 	
 # 5B.Convertit l'id du client, puis retourne la proba de défaut de crédit
