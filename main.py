@@ -10,6 +10,7 @@ import json
 app = FastAPI()
 model = joblib.load('./src/API_model.joblib')
 X_split_valid_sample = joblib.load('./src/X_split_valid_sample.joblib')
+optimum_threshold = joblib.load('./src/optimum_threshold.joblib')
 
 
 # 3A. Index route, opens automatically on http://127.0.0.1:8000
@@ -44,7 +45,7 @@ def ping2(incoming_data):     # il faut que l'agument de la fonction (incoming_d
 	print("-----------------------------------------")
 	return incoming_data
 	
-# 5B.Prise en main de la structure GET/POST + {id_client}
+# 4C.Prise en main de la structure GET/POST + {id_client}
 @app.get('/hello_id_client/{id_client}')
 @app.post('/hello_id_client/{id_client}')
 def hello_id_client(id_client : int):
@@ -54,7 +55,7 @@ def hello_id_client(id_client : int):
 	return f"Hello from hello_id_client(). Value = {id_client}. Type = {type(id_client)}"
 	
 
-# 4B. Convertit le json reçu en dataframe, puis retourne l'index du client
+# 4D. Convertit le json reçu en dataframe, puis retourne l'index du client
 @app.post('/pong/')
 def pong_json(incoming_json):
 	df2_un_client = pd.read_json(incoming_json, orient='index')
@@ -63,7 +64,6 @@ def pong_json(incoming_json):
 
 
 # 5A.Convertit le json reçu (au format de dict dans un string) en dataframe, puis retourne la proba de défaut de crédit
-# Ca fonctionne via curl (SERVER/docs), mais pas via requests.
 @app.post('/predict_json/{json_un_client}')
 def predict_json(json_un_client):
 	print("-----------------------------------------")
@@ -80,4 +80,17 @@ def predict_id_client(id_client : int):
 	un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]
 	probability = model.predict_proba(un_client)[:,1][0]
 	return {'probability': probability}
+	
+
+# Retourne le optimum_threshold
+@app.post('/optimum_threshold/')
+def return_optimum_threshold():
+    return optimum_threshold
+	
+	
+# Retourne les données (json) d'un client
+@app.post('/fetch_data_id_client/{id_client}')
+def fetch_data_id_client(id_client : int):
+	un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]    # au format pandas
+	return un_client.to_json(orient='index')
 	
