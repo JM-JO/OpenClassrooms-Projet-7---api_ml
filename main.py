@@ -9,12 +9,13 @@ import json
 # 2. Create app and model objects
 app = FastAPI()
 model = joblib.load('./src/API_model.joblib')
-X_split_valid_sample = joblib.load('./src/X_split_valid_sample.joblib')
+# X_split_valid_sample = joblib.load('./src/X_split_valid_sample.joblib')
+df_test_sample = joblib.load('./src/df_test_sample.joblib')
 optimum_threshold = joblib.load('./src/optimum_threshold.joblib')
 
 
 # 3A. Index route, opens automatically on http://127.0.0.1:8000
-@app.get('/')
+@app.get('/') 
 def index():
     '''
     This is a first docstring.
@@ -77,7 +78,8 @@ def predict_json(json_un_client):
 # 5B.Convertit l'id du client, puis retourne la proba de défaut de crédit
 @app.post('/predict_id_client/{id_client}')
 def predict_id_client(id_client : int):
-	un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]
+	# un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]
+	un_client = df_test_sample[df_test_sample.index == id_client]
 	probability = model.predict_proba(un_client)[:,1][0]
 	return {'probability': probability}
 	
@@ -91,6 +93,7 @@ def return_optimum_threshold():
 # Retourne les données (json) d'un client
 @app.post('/fetch_data_id_client/{id_client}')
 def fetch_data_id_client(id_client : int):
-	un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]    # au format pandas
+	# un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]    # au format pandas
+	un_client = df_test_sample[df_test_sample.index == id_client]    # au format pandas
 	return un_client.to_json(orient='index')
 	
