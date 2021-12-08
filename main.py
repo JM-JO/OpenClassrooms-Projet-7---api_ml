@@ -4,12 +4,12 @@ from fastapi import FastAPI
 import joblib
 import pandas as pd
 import json
+import shap
 
 
 # 2. Create app and model objects
 app = FastAPI()
 model = joblib.load('./src/API_model.joblib')
-# X_split_valid_sample = joblib.load('./src/X_split_valid_sample.joblib')
 df_test_sample = joblib.load('./src/df_test_sample.joblib')
 optimum_threshold = joblib.load('./src/optimum_threshold.joblib')
 
@@ -46,6 +46,7 @@ def ping2(incoming_data):     # il faut que l'agument de la fonction (incoming_d
 	print("-----------------------------------------")
 	return incoming_data
 	
+	
 # 4C.Prise en main de la structure GET/POST + {id_client}
 @app.get('/hello_id_client/{id_client}')
 @app.post('/hello_id_client/{id_client}')
@@ -59,28 +60,24 @@ def hello_id_client(id_client : int):
 # 4D. Convertit le json reçu en dataframe, puis retourne l'index du client
 @app.post('/pong/')
 def pong_json(incoming_json):
-	df2_un_client = pd.read_json(incoming_json, orient='index')
-	var = int(df2_un_client.index[0])
+	df_one_client = pd.read_json(incoming_json, orient='index')
+	var = int(df_one_client.index[0])
 	return {'index client :': var}
 
 
 # 5A.Convertit le json reçu (au format de dict dans un string) en dataframe, puis retourne la proba de défaut de crédit
-@app.post('/predict_json/{json_un_client}')
-def predict_json(json_un_client):
-	print("-----------------------------------------")
-	print("type :", type(json_un_client))
-	print("-----------------------------------------")
-	df2_un_client = pd.read_json(json_un_client, orient='index')
-	probability = model.predict_proba(df2_un_client)[:,1][0]
+@app.post('/predict_json/{json_one_client}')
+def predict_json(json_one_client):
+	df_one_client = pd.read_json(json_one_client, orient='index')
+	probability = model.predict_proba(df_one_client)[:,1][0]
 	return {'probability': probability}
 	
 	
 # 5B.Convertit l'id du client, puis retourne la proba de défaut de crédit
 @app.post('/predict_id_client/{id_client}')
 def predict_id_client(id_client : int):
-	# un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]
-	un_client = df_test_sample[df_test_sample.index == id_client]
-	probability = model.predict_proba(un_client)[:,1][0]
+	df_one_client = df_test_sample[df_test_sample.index == id_client]
+	probability = model.predict_proba(df_one_client)[:,1][0]
 	return {'probability': probability}
 	
 
@@ -90,10 +87,22 @@ def return_optimum_threshold():
     return optimum_threshold
 	
 	
-# Retourne les données (json) d'un client
+# Returns the SHAP values (json) for a client
 @app.post('/fetch_data_id_client/{id_client}')
 def fetch_data_id_client(id_client : int):
-	# un_client = X_split_valid_sample[X_split_valid_sample.index == id_client]    # au format pandas
-	un_client = df_test_sample[df_test_sample.index == id_client]    # au format pandas
-	return un_client.to_json(orient='index')
+	df_one_client = df_test_sample[df_test_sample.index == id_client]    # type: pandas
+	return df_one_client.to_json(orient='index')
+
+
+# Returns the SHAP values (json) for a client
+@app.post('/fetch_shap_id_client/{id_client}')
+def fetch_shap_id_client(id_client : int):
+	df_one_client = df_test_sample[df_test_sample.index == id_client]    # type: pandas
+	explainer = shap.TreeExplainer(model)
+	shap_values = explainer.shap_values(df_one_client)   
+	df_shap = pd.DataFrame({'SHAP value' : shap_values[1][0], 'feature' : df_test_sample.columns})
+	df_shap.sort_values(by='SHAP value', inplace=True, ascending=False)
+	return df_shap.to_json(orient='index')
+	
+	
 	
