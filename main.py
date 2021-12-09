@@ -9,7 +9,6 @@ import shap
 # 2. Create app and model objects
 app = FastAPI()
 model = joblib.load('./resources/API_model.joblib')
-df_test_sample = joblib.load('./resources/df_test_sample.joblib')
 optimum_threshold = joblib.load('./resources/optimum_threshold.joblib')
 
 
