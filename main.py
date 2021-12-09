@@ -1,6 +1,6 @@
 # 1. Library imports
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Body
 import joblib
 import pandas as pd
 import json
@@ -9,7 +9,6 @@ import shap
 # 2. Create app and model objects
 app = FastAPI()
 model = joblib.load('./resources/API_model.joblib')
-df_test_sample = joblib.load('./resources/df_test_sample.joblib')
 optimum_threshold = joblib.load('./resources/optimum_threshold.joblib')
 
 
@@ -56,49 +55,26 @@ def hello_id_client(id_client: int):
     return f"Hello from hello_id_client(). Value = {id_client}. Type = {type(id_client)}"
 
 
-# 4D. Convertit le json reçu en dataframe, puis retourne l'index du client
-@app.post('/pong/')
-def pong_json(incoming_json):
-    df_one_client = pd.read_json(incoming_json, orient='index')
-    var = int(df_one_client.index[0])
-    return {'index client :': var}
-
-
-# 5A.Convertit le json reçu (au format de dict dans un string) en dataframe, puis retourne la proba de défaut de crédit
-@app.post('/predict_json/{json_one_client}')
-def predict_json(json_one_client):
-    df_one_client = pd.read_json(json_one_client, orient='index')
-    probability = model.predict_proba(df_one_client)[:, 1][0]
-    return {'probability': probability}
-
-
-# 5B.Convertit l'id du client, puis retourne la proba de défaut de crédit
-@app.post('/predict_id_client/{id_client}')
-def predict_id_client(id_client: int):
-    df_one_client = df_test_sample[df_test_sample.index == id_client]
+# 5.Retourne la proba de défaut de crédit pour un client
+@app.get('/predict')
+def predict(json_client: dict = Body({})):
+    df_one_client = pd.Series(json_client).to_frame().transpose()
     probability = model.predict_proba(df_one_client)[:, 1][0]
     return {'probability': probability}
 
 
 # Retourne le optimum_threshold
-@app.post('/optimum_threshold/')
-def return_optimum_threshold():
+@app.get('/optimum_threshold/')
+def get_optimum_threshold():
     return optimum_threshold
 
 
 # Returns the SHAP values (json) for a client
-@app.post('/fetch_data_id_client/{id_client}')
-def fetch_data_id_client(id_client: int):
-    df_one_client = df_test_sample[df_test_sample.index == id_client]  # type: pandas
-    return df_one_client.to_json(orient='index')
-
-
-# Returns the SHAP values (json) for a client
-@app.post('/fetch_shap_id_client/{id_client}')
-def fetch_shap_id_client(id_client: int):
-    df_one_client = df_test_sample[df_test_sample.index == id_client]  # type: pandas
+@app.get('/shap')
+def get_shap_from_json_client(json_client: dict = Body({})):
+    df_one_client = pd.Series(json_client).to_frame().transpose()
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(df_one_client)
-    df_shap = pd.DataFrame({'SHAP value': shap_values[1][0], 'feature': df_test_sample.columns})
+    df_shap = pd.DataFrame({'SHAP value': shap_values[1][0], 'feature': df_one_client.columns})
     df_shap.sort_values(by='SHAP value', inplace=True, ascending=False)
     return df_shap.to_json(orient='index')
