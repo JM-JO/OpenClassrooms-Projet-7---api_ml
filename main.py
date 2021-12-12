@@ -1,6 +1,6 @@
 # 1. Library imports
 import uvicorn
-from fastapi import FastAPI, Request, Body
+from fastapi import FastAPI, Body   # Request
 import joblib
 import pandas as pd
 import json
@@ -55,23 +55,38 @@ def hello_id_client(id_client: int):
     return f"Hello from hello_id_client(). Value = {id_client}. Type = {type(id_client)}"
 
 
-# 5.Retourne la proba de défaut de crédit pour un client
-@app.get('/predict')
-def predict(json_client: dict = Body({})):
-    df_one_client = pd.Series(json_client).to_frame().transpose()
-    probability = model.predict_proba(df_one_client)[:, 1][0]
-    return {'probability': probability}
-
-
 # Retourne le optimum_threshold
 @app.get('/optimum_threshold/')
 def get_optimum_threshold():
     return optimum_threshold
 
 
+
+# 5.Retourne la proba de défaut de crédit pour un client
+@app.get('/prediction/')
+def get_prediction(json_client: dict = Body({})):
+    print("-----------------------------------------")
+    print("type :", type(json_client))
+    print("-----------------------------------------")
+    df_one_client = pd.Series(json_client).to_frame().transpose()
+    probability = model.predict_proba(df_one_client)[:, 1][0]
+    return {'probability': probability}
+
+
+@app.get('/test_pour_voir/')
+def test_pour_voir(valeur):
+    print("-----------------------------------------")
+    print("type :", type(valeur))
+    print("-----------------------------------------")
+    return {'message': f'Hello, {valeur}'}
+
+
+
+
+
 # Returns the SHAP values (json) for a client
-@app.get('/shap')
-def get_shap_from_json_client(json_client: dict = Body({})):
+@app.get('/shap/')
+def get_shap(json_client: dict = Body({})):
     df_one_client = pd.Series(json_client).to_frame().transpose()
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(df_one_client)
