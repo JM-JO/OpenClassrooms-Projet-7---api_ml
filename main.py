@@ -21,49 +21,16 @@ def index():
     return {'message': 'Hello, stranger'}
 
 
-# 3B. Route with a single parameter, returns the parameter within a message
-@app.get('/api/{name}')
-def get_name(name: str):
-    return {'message': f'Hello, {name}'}
-
-
-# 4A. Retourne la data reçue
-@app.post('/ping/')
-def ping(incoming_data):
-    print("-----------------------------------------")
-    print("type :", type(incoming_data))
-    print("-----------------------------------------")
-    return incoming_data
-
-
-# 4A2. Retourne la data reçue (autre syntaxe pour FastAPI)
-@app.post('/ping2/{incoming_data}')
-def ping2(incoming_data):  # il faut que l'agument de la fonction (incoming_data) soit identique à celui du décorateur
-    print("-----------------------------------------")
-    print("type :", type(incoming_data))
-    print("-----------------------------------------")
-    return incoming_data
-
-
-# 4C.Prise en main de la structure GET/POST + {id_client}
-@app.get('/hello_id_client/{id_client}')
-@app.post('/hello_id_client/{id_client}')
-def hello_id_client(id_client: int):
-    print("------------------------------------------")
-    print("type :", type(id_client))
-    print("------------------------------------------")
-    return f"Hello from hello_id_client(). Value = {id_client}. Type = {type(id_client)}"
-
 
 # Retourne le optimum_threshold
-@app.get('/optimum_threshold/')
+@app.post('/optimum_threshold/')
 def get_optimum_threshold():
     return optimum_threshold
 
 
 
 # 5.Retourne la proba de défaut de crédit pour un client
-@app.get('/prediction/')
+@app.post('/prediction/')
 def get_prediction(json_client: dict = Body({})):
     print("-----------------------------------------")
     print("type :", type(json_client))
@@ -73,19 +40,12 @@ def get_prediction(json_client: dict = Body({})):
     return {'probability': probability}
 
 
-@app.get('/test_pour_voir/')
-def test_pour_voir(valeur):
-    print("-----------------------------------------")
-    print("type :", type(valeur))
-    print("-----------------------------------------")
-    return {'message': f'Hello, {valeur}'}
-
 
 
 
 
 # Returns the SHAP values (json) for a client
-@app.get('/shap/')
+@app.post('/shap/')
 def get_shap(json_client: dict = Body({})):
     df_one_client = pd.Series(json_client).to_frame().transpose()
     explainer = shap.TreeExplainer(model)
