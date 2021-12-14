@@ -23,18 +23,15 @@ def index():
 
 
 # Retourne le optimum_threshold
-@app.post('/optimum_threshold/')
+@app.get('/optimum_threshold/')
 def get_optimum_threshold():
     return optimum_threshold
 
 
 
 # 5.Retourne la proba de défaut de crédit pour un client
-@app.post('/prediction/')
+@app.get('/prediction/')
 def get_prediction(json_client: dict = Body({})):
-    print("-----------------------------------------")
-    print("type :", type(json_client))
-    print("-----------------------------------------")
     df_one_client = pd.Series(json_client).to_frame().transpose()
     probability = model.predict_proba(df_one_client)[:, 1][0]
     return {'probability': probability}
@@ -45,7 +42,7 @@ def get_prediction(json_client: dict = Body({})):
 
 
 # Returns the SHAP values (json) for a client
-@app.post('/shap/')
+@app.get('/shap/')
 def get_shap(json_client: dict = Body({})):
     df_one_client = pd.Series(json_client).to_frame().transpose()
     explainer = shap.TreeExplainer(model)
