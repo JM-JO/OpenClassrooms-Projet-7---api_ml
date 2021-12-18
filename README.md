@@ -1,3 +1,7 @@
+This repository contains the code for the prediction API.
+  
+It is deployment-ready for Heroku.
+  
 Deployed on Heroku: https://project7-api-ml.herokuapp.com/
 
 -------------------------
